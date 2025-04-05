@@ -3,55 +3,67 @@
 #include <string.h>
 #include <math.h>
 
-#include "speaknum.h"
+#include "speaknum_int.h"
 
-
-static int speak(char *s)
+static int speak(char *str, char *file)
 {
-    printf(" %s", s);
+#if SPEAK_PRINT == true
+    printf(" %s", str);
+#endif
+
+#if SPEAK_PLAY_FROM_FILE == true
+
+    // Currently linux 'system' command is used to play the wav file
+    // In other environment, this might need to be done by the C program itself,
+    // i.e. read the WAV file and output it to the speaker 
+    char cmd[CMDSZ];
+    cmd[CMDSZ-1] = '\0';
+    snprintf(cmd, CMDSZ-1, "%s %s/%s", PCM_PLAY_CMD, PCM_FILE_DIR, file);
+    //printf("CMD=%s\n", cmd);  // DBG
+    system(cmd);
+#endif
+
     return 0;
 }
 
 static int speak_digit(int n)
 {
-    if (n>9)    // Error input
+    if (n > 9)    // Error input
     {
         printf("ERROR: %s: bad input: %d\n", __FUNCTION__, n);
         return -1;
     }
-    speak(digits.num[n]);
+    speak(digits.str[n], digits.file[n]);
 
     return 0;
 }
 
-
-
 static int speak_10to19(int n) 
 {
-    if (n>19)    // Error input
+    if (n > 19)    // Error input
     {
         printf("ERROR: %s: bad input: %d\n", __FUNCTION__, n);
         return -1;
     }
-    speak(num_10to19.num[n-10]);
+    speak(num_10to19.str[n-10], num_10to19.file[n-10]);
     return 0;
 };
 
 static int speak_20to90(int n) 
 {
-    if (n>9)    // Error input
+    if (n > 9)    // Error input
     {
         printf("ERROR: %s: bad input: %d\n", __FUNCTION__, n);
         return -1;
     }
-    speak(tens.num[n]);
+    speak(tens.str[n], tens.file[n]);
     return 0;
 };
 
 static int speak_hundreds(int n) 
 {
     speak_number(n);
-    speak(HUNDRED);
+    speak(HUNDRED, HUNDRED_WAV);
 
     return 0;
 };
@@ -59,51 +71,54 @@ static int speak_hundreds(int n)
 static int speak_thousands(int n) 
 {
     speak_number(n);
-    speak(THOUSAND);
+    speak(THOUSAND, THOUSAND_WAV);
     
     return 0;
 };
 
-#if 0
-// In case of text print newline. In case of speech, maybe a beep?
-static int speak_done()
-{
-    printf("\n");  
-
-    return 0;
-}
-#endif
-
 int speak_rupees() 
 {
-    speak(RUPEES);
-//    speak_done();
+    speak(RUPEES, RUPEES_WAV);
+
     return 0;
 };
 
-int speak_paisa() 
+int speak_paise() 
 {
-    speak(PAISA);
-//    speak_done();
+    speak(PAISE, PAISE_WAV);
+
     return 0;
 };
 
 int speak_digits(int n)
 {
-    int totaldigits = floor(log10((double)n)) + 1;
-    int digits = totaldigits;
-    int lsb;
-    int power;
+    int totaldigits = floor(log10((double)n)) + 1; // number of digits in this number
+    int digits = totaldigits;   // save
+    int msd;    // most significant digit in a decimal number
+    int power;  // 10 raised to the power of number of digits in a number
 
+    /*
+        To extract the digits from the number starting from the highest position.
+        e.g. n = 345
+        digits = 3
+        power = 100
+
+        msd = 345/100 = 3
+        output the number 3
+        remove the msd by
+        n = n - (msd*power) i.e. n = 345 - (3 * 100) = 45
+        recalculate no of digits = 2
+        Continue to loop until all 3 digits are output  
+    */
     for (int i=0; i<totaldigits; i++)
     {
       //printf("X=%d, digits=%d\n", x, digits);
-      power = (int)pow(10.0, digits-1);
-      lsb = n/power;
-      //printf("power = %d,lsb = %d\n", power, (int)lsb);
-      speak_digit(lsb);
+      power = (int)pow(10.0, digits-1); 
+      msd = n/power;
+      //printf("power = %d,msd = %d\n", power, (int)msd);
+      speak_digit(msd);
 
-      n = n - (lsb*power);
+      n = n - (msd*power);
       digits = digits-1;
     }
     return 0;
@@ -160,54 +175,4 @@ int speak_number(int n)
     return 0;
 }
 
-// Test driver
-int main()
-{
-    printf("\n");
-    speak_number(0); speak_rupees();
-    speak_number(8); speak_rupees();
-    speak_number(9); speak_rupees();
-    speak_number(10); speak_rupees();
-    speak_number(19); speak_rupees();
-    speak_number(20); speak_rupees();
-    speak_number(21); speak_rupees();
-    speak_number(29); speak_rupees();
-    speak_number(80); speak_rupees();
-    speak_number(81); speak_rupees();
-    speak_number(89); speak_rupees();
-    speak_number(90); speak_rupees();
-    speak_number(99); speak_rupees();
-    speak_number(100); speak_rupees();
-    speak_number(101); speak_rupees();
-    speak_number(109); speak_rupees();
-    speak_number(125); speak_rupees();
-    speak_number(199); speak_rupees();
-    speak_number(200); speak_rupees();
-    speak_number(250); speak_rupees();
-    speak_number(990); speak_rupees();
-    speak_number(999); speak_rupees();
-    speak_number(1000); speak_rupees();
-    speak_number(1199); speak_rupees();
-    speak_number(1200); speak_rupees();
-    speak_number(1250); speak_rupees();
-    speak_number(1990); speak_rupees();
-    speak_number(1999); speak_rupees();
-    speak_number(5289); speak_rupees();
-    speak_number(9000); speak_rupees();
-    speak_number(9199); speak_rupees();
-    speak_number(9999); speak_rupees();
-    speak_number(10000); speak_rupees();
-    speak_number(99999); speak_rupees();
-    speak_number(98765432); speak_rupees();
 
-    printf("\n");
-    speak_digits(25);
-    speak_paisa();
-
-    speak_number(50);
-    speak_paisa();
-
-    printf("\n");
-
-    return 0;
-}

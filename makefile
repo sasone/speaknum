@@ -1,14 +1,18 @@
 CC=gcc
-CFLAGS=-Wall
+CFLAGS=-I. -Wall
 LDFLAGS=-lm
+DEPS = speaknum.h
+OBJ = speaknum.o test_speaknum.o
 
 .PHONY: all
-all: speaknum
+all: test_speaknum
 
 .PHONY: clean
 clean:
-	$(RM) *~ *.o speaknum
+	$(RM) *~ *.o test_speaknum
 
-OBJECTS=speaknum.o
-speaknum: $(OBJECTS)
-	$(CC) $(CFLAGS) $(OBJECTS) $(LDFLAGS) -o speaknum
+%.o: %.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+test_speaknum: $(OBJ)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
