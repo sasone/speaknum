@@ -1,11 +1,11 @@
 # speaknum
 
-C code to read out a given number. 
-The first version will have a POC to print the given number as a english text.
-Next version would include audio files to read out the numbers on the speaker.
+C language library to read out a given number. 
+Options are available to only write out the text version of the number, read the number thouogh the speaker
+using the predefined number PCM files and using the system command line audio player. 
 
-The code is tested on a Ubuntu 22.04 system.
-----
+//TODO: As a third option, PCM data could be included as part of the binary, which should be pushed to speaker device by the program.
+
 Copyright 2025 Srinivasa SA
 
 Licensed under the Apache License, Version 2.0 (the "License");
